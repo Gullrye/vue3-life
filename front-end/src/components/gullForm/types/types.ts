@@ -56,6 +56,8 @@ export interface FormOptions {
     max?: number
     activeValue?: number
     inactiveValue?: number
+    valueFormat?: string
+    type?: string
   }
   // 表单项的子元素
   children?: FormOptions[]

@@ -6,18 +6,22 @@ export interface LifeType {
   _id: string
   __v: number
   username: string
+  birth: string
   lifeEnd: number
   lightOrDark: number
   firstDay: number
   beWorry: boolean
+  remain: any
+  percentage: any
 }
 
 const lifeData = ref<LifeType[]>()
 const lifeDetail = ref<LifeType>()
+const lifeDetailPage = ref<LifeType>()
 const visible = ref<boolean>(false)
 
 const getLifeList = () => {
-  $http.get('/life').then((res: any) => {
+  return $http.get('/life').then((res: any) => {
     const { data } = res
     lifeData.value = data
   })
@@ -26,6 +30,7 @@ const getLifeDetail = (id: string) => {
   $http.get(`/life/${id}`).then((res: any) => {
     const { data } = res
     lifeDetail.value = data
+    lifeDetailPage.value = data
   })
 }
 const editLife = (id: string, params: any) => {
@@ -39,6 +44,7 @@ const editLife = (id: string, params: any) => {
     })
     visible.value = false
     getLifeList()
+    getLifeDetail(id)
   })
 }
 const delLife = (id: string) => {
@@ -51,6 +57,7 @@ const delLife = (id: string) => {
       duration: 1500
     })
     getLifeList()
+    getLifeDetail(id)
   })
 }
 const addLife = (params: any) => {
@@ -67,10 +74,12 @@ const addLife = (params: any) => {
   })
 }
 const open = ($event: any, id: string) => {
-  if (id) {
+  if (id && id !== 'add') {
+    console.log('id')
     getLifeDetail(id)
   } else {
     lifeDetail.value = {} as LifeType
+    console.log(11111)
   }
   visible.value = true
 }
@@ -78,6 +87,7 @@ const open = ($event: any, id: string) => {
 export default {
   lifeData,
   lifeDetail,
+  lifeDetailPage,
   visible,
   getLifeList,
   getLifeDetail,

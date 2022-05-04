@@ -6,12 +6,15 @@ import GullProgress from '@/components/gullProgress/GullProgress.vue'
 import useLife from '@/hooks/useLife'
 import { onMounted, ref, watch } from 'vue'
 import deepClone from 'lodash/cloneDeep'
+import type { LifeType } from '@/hooks/useLife'
 
 const {
   lifeData,
   lifeDetail,
+  lifeDetailPage,
   visible,
   getLifeList,
+  getLifeDetail,
   addLife,
   editLife,
   delLife,
@@ -41,6 +44,23 @@ let optionsOrigin: FormOptions[] = [
     attrs: {
       clearable: true
     }
+  },
+  {
+    type: 'date-picker',
+    value: '',
+    prop: 'birth',
+    label: '出生日期',
+    placeholder: '请选择出生日期',
+    attrs: {
+      type: 'date',
+      clearable: true,
+      valueFormat: 'YYYY-MM-DD'
+    },
+    rules: [
+      {
+        required: true
+      }
+    ]
   },
   {
     type: 'input-number',
@@ -105,6 +125,21 @@ let optionsOrigin: FormOptions[] = [
 ]
 let options = ref<FormOptions[]>(deepClone(optionsOrigin))
 
+watch(
+  lifeDetail,
+  () => {
+    if (lifeDetail.value && lifeDetail.value._id) {
+      options.value.forEach((item: FormOptions) => {
+        item.value =
+          lifeDetail.value![item.prop as keyof typeof lifeDetail.value]
+      })
+    } else {
+      options.value = deepClone(optionsOrigin)
+    }
+  },
+  { deep: true }
+)
+
 let confirm = (form: any) => {
   let validate = form.validate()
   validate((valid: boolean) => {
@@ -127,22 +162,12 @@ let handleDelete = (id: string) => {
   delLife(id)
 }
 
-getLifeList()
-watch(
-  lifeDetail,
-  () => {
-    if (lifeDetail.value && lifeDetail.value._id) {
-      options.value.forEach((item: FormOptions) => {
-        item.value =
-          lifeDetail.value![item.prop as keyof typeof lifeDetail.value]
-      })
-    } else {
-      options.value = optionsOrigin
-    }
-  },
-  { deep: true }
-)
-
+onMounted(() => {
+  getLifeList().then(() => {
+    let id = lifeData.value ? lifeData.value[0]._id : ''
+    getLifeDetail(id)
+  })
+})
 </script>
 
 <template>
@@ -162,11 +187,19 @@ watch(
       <el-button type="danger" @click="open">Add</el-button>
     </div>
     <div class="title">"锦瑟无端五十弦"</div>
-    <p class="author">Zz <strong>·</strong> {{ lifeDetail?.username || '暂无' }}</p>
+    <p class="author">
+      Zz <strong>·</strong> {{ lifeDetailPage?.username || '暂无' }}
+      <span>{{ lifeDetailPage?.birth }}</span>
+    </p>
     <div class="summary-box">
-      <p>你的<strong>人生</strong>还剩下<strong>36</strong>年</p>
+      <p>
+        你的<strong>人生</strong>还剩下<strong>{{
+          (lifeDetailPage?.remain.year)
+        }}</strong
+        >年
+      </p>
       <gull-progress
-        :bar-width="'80%'"
+        :bar-width="lifeDetailPage?.percentage.year"
         :bar-bg-color="'#50bfff'"
       ></gull-progress>
       <p>
@@ -176,27 +209,36 @@ watch(
       </p>
     </div>
     <div class="detail-box">
-      <p>今<strong>天</strong>还余下大约 1 小时</p>
+      <p>
+        今<strong>天</strong>还余下大约
+        {{
+          lifeDetailPage?.remain.dayMinutes % 60 != 0
+            ? (lifeDetailPage?.remain.dayMinutes / 60).toFixed(2) + '小时'
+            : lifeDetailPage?.remain.dayMinutes + '分钟'
+        }}
+      </p>
       <gull-progress
-        :bar-width="'3%'"
+        :bar-width="lifeDetailPage?.percentage.dayMinutes"
         :bar-bg-color="'#ff4949'"
       ></gull-progress>
 
-      <p>本<strong>周</strong>还余下 3 天</p>
+      <p>本<strong>周</strong>还余下 {{ lifeDetailPage?.remain.weekDay }} 天</p>
       <gull-progress
-        :bar-width="'43%'"
+        :bar-width="lifeDetailPage?.percentage.weekDay"
         :bar-bg-color="'#f7ba2a'"
       ></gull-progress>
 
-      <p>这个<strong>月</strong>还余下 11 天</p>
+      <p>这个<strong>月</strong>还余下 {{ lifeDetailPage?.remain.monthDay }} 天</p>
       <gull-progress
-        :bar-width="'36%'"
+        :bar-width="lifeDetailPage?.percentage.monthDay"
         :bar-bg-color="'#f7ba2a'"
       ></gull-progress>
 
-      <p>2022 <strong>年</strong>还余下 12 个月</p>
+      <p>
+        {{ new Date().getFullYear() }} <strong>年</strong> 还余下 {{ lifeDetailPage?.remain.yearMonth }} 个月
+      </p>
       <gull-progress
-        :bar-width="'95%'"
+        :bar-width="lifeDetailPage?.percentage.yearMonth"
         :bar-bg-color="'#13ce66'"
       ></gull-progress>
     </div>

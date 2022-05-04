@@ -14,10 +14,13 @@ const Life = mongoose.model(
   'Life',
   new mongoose.Schema({
     username: { type: String },
+    birth: { type: String },
     lifeEnd: { type: Number },
     lightOrDark: { type: Number },
     firstDay: { type: Number },
-    beWorry: { type: Boolean }
+    beWorry: { type: Boolean },
+    remain: { type: Object },
+    percentage: { type: Object }
   })
 )
 // get一般用于展示数据
@@ -51,6 +54,29 @@ app.delete('/api/life/:id', async (req, res) => {
 // Life 详情
 app.get('/api/life/:id', async (req, res) => {
   const life = await Life.findById(req.params.id)
+  life.remain = {
+    year: (
+      life.lifeEnd -
+      (new Date().getTime() - new Date(life.birth).getTime()) /
+        1000 /
+        60 /
+        60 /
+        24 /
+        365
+    ).toFixed(2),
+    // 今天剩下多少个小时
+    dayMinutes: 24 * 60 - new Date().getHours() * 60 - new Date().getMinutes(),
+    weekDay: 7 - new Date().getDay(),
+    monthDay: getMonthDate() - new Date().getDate(),
+    yearMonth: 12 - new Date().getMonth()
+  }
+  life.percentage = {
+    year: ((life.remain.year / life.lifeEnd) * 100).toFixed() + '%',
+    dayMinutes: ((life.remain.dayMinutes / (24 * 60)) * 100).toFixed() + '%',
+    weekDay: ((life.remain.weekDay / 7) * 100).toFixed() + '%',
+    monthDay: ((life.remain.monthDay / getMonthDate()) * 100).toFixed() + '%',
+    yearMonth: ((life.remain.yearMonth / 12) * 100).toFixed() + '%'
+  }
   res.send({
     message: '获取详情成功',
     data: life
@@ -64,6 +90,15 @@ app.put('/api/life/:id', async (req, res) => {
     data: life
   })
 })
+
+// 获取当月天数
+function getMonthDate() {
+  var date = new Date()
+  var year = date.getFullYear()
+  var month = date.getMonth() + 1
+  var d = new Date(year, month, 0)
+  return d.getDate()
+}
 app.listen(3001, () => {
   console.log('http://localhost:3001/')
 })
