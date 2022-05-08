@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps({
+defineProps({
   barWidth: {
     type: String,
     default: '60%'

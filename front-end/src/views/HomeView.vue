@@ -6,7 +6,6 @@ import GullProgress from '@/components/gullProgress/GullProgress.vue'
 import useLife from '@/hooks/useLife'
 import { onMounted, ref, watch } from 'vue'
 import deepClone from 'lodash/cloneDeep'
-import type { LifeType } from '@/hooks/useLife'
 
 const {
   lifeData,
@@ -125,6 +124,7 @@ let optionsOrigin: FormOptions[] = [
 ]
 let options = ref<FormOptions[]>(deepClone(optionsOrigin))
 
+// 表单弹窗：如果 _id 非空，则为编辑，需要数据回显；如果 lifeDetail 为无 _id，则为添加，需要重置表单各项为默认值
 watch(
   lifeDetail,
   () => {
@@ -140,6 +140,7 @@ watch(
   { deep: true }
 )
 
+// 点击弹窗的确认进行  修改 或 添加
 let confirm = (form: any) => {
   let validate = form.validate()
   validate((valid: boolean) => {
@@ -155,7 +156,7 @@ let confirm = (form: any) => {
     }
   })
 }
-let cancel = (form: any) => {
+let cancel = () => {
   visible.value = false
 }
 let handleDelete = (id: string) => {
@@ -164,6 +165,7 @@ let handleDelete = (id: string) => {
 
 onMounted(() => {
   getLifeList().then(() => {
+    // 默认显示第一个人
     let id = lifeData.value ? lifeData.value[0]._id : ''
     getLifeDetail(id)
   })
@@ -252,7 +254,7 @@ onMounted(() => {
     ref="modalForm"
   >
     <template #footer="scope">
-      <el-button @click="cancel(scope.form)">取消</el-button>
+      <el-button @click="cancel">取消</el-button>
       <el-button type="primary" @click="confirm(scope.form)">确认</el-button>
     </template>
     <template #uploadArea>

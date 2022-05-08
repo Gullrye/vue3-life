@@ -13,6 +13,8 @@ module.exports = {
     'vue/setup-compiler-macros': true
   },
   rules: {
-    'prettier/prettier': 'off'
+    'prettier/prettier': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   }
 }
